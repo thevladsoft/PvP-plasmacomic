@@ -1,0 +1,278 @@
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA .        *
+ ***************************************************************************/
+ 
+//comic.url=""
+//Version que complica las cosas pero quería ser capaz de usar fechas. La otra hubiese usado strings, pero no sabría como saltar a una específica.
+function init()
+{
+    comic.comicAuthor = "Scott R. Kurtz";
+    comic.firstIdentifier = "2004-08-03";
+    comic.websiteUrl = "http://drmcninja.com/";
+    comic.curl = "http://drmcninja.com/comics/";
+
+    //url += "/comics/" + comic.identifier.toString("yyyy-MM-dd"+"");
+    //url += "comics/";
+    //url = "http://pvponline.com/comic/"+comic.identifier.toString("yyyy/MM/dd/");
+//print("****"+url);
+//Primero paso la página principal para saber ecual es el comic más reciente
+    comic.requestPage(comic.websiteUrl, comic.User);
+    //comic.requestPage("http://newcdn.pvponline.com/img/comic/pvp20120726.jpg", comic.Image);
+
+}
+ 
+function pageRetrieved(id, data)
+{
+
+    //var match;
+    var url;
+    var dat = comic.identifier.toString("yyyy-MM-dd");
+    //quiero saber el comic más reciente en la página principal
+    if(id==comic.User){
+       var re = new RegExp("http://drmcninja.com/comics/(\\d{4}-\\d{2}-\\d{2})([^\\.]*)(\\.\\S\\S\\S)");
+       var match = re.exec(data);
+       if (match != null) {
+//Lo encontró y lo convierte en lastidentifier, y si es menor 
+//que identifier este será automáticamente igual a last identifier.
+	    comic.lastIdentifier=match[1];
+	    print("->->->"+match[1]+"||"+match[2]+"||"+match[3]+"||"+comic.identifier);
+            //comic.identifier = date.fromString(match[2], "yyyy/MM/dd");
+            //comic.websiteUrl = match[1];
+	    //comic.url=comic.curl+match[1]+match[2]+match[3];
+	    //comic.url=comic.curl+match[1]+match[2]+match[3];
+	    //comic.previousIdentifier=comic.identifier;
+	    //comic.nextIdentifier=comic.identifier.addDays(2);
+// //Lunes
+//  	    if (comic.identifier.dayOfWeek() == 1){
+// 		comic.previousIdentifier=comic.identifier.addDays(-3);
+// 		comic.nextIdentifier=comic.identifier.addDays(2);
+//  	    }
+// //Miercoles
+//  	    if (comic.identifier.dayOfWeek() == 3){
+// 		comic.previousIdentifier=comic.identifier.addDays(-2);
+// 		comic.nextIdentifier=comic.identifier.addDays(2);
+//  	    }
+// //Viernes
+//  	    if (comic.identifier.dayOfWeek() == 5){
+// 		comic.previousIdentifier=comic.identifier.addDays(-2);
+// 		comic.nextIdentifier=comic.identifier.addDays(3);
+//  	    }
+//Cualquier otro dia.
+//  	    if (comic.identifier.dayOfWeek() >=6 || comic.identifier.dayOfWeek() ==2 ||comic.identifier.dayOfWeek() ==4){
+// 		 comic.identifier = comic.lastIdentifier;
+// 	         //comic.error();
+// 		 //return;
+// 	    }
+	    comic.requestPage(comic.curl, comic.Page);
+ 	    //print("@@@"+comic.identifier.dayOfWeek()+"   "+comic.previousIdentifier.dayOfWeek()+"   "+comic.nextIdentifier.dayOfWeek())
+	    //print(comic.url);
+	    //comic.additionalText = comic.url;
+	    //comic.requestPage(comic.url, comic.Image);
+//Ahora llamo la pagina comic.websiteUrl, con el listado de comics
+       } else {//No lo encontró?
+            comic.error();
+            return;
+       }
+       
+    }
+//Busco el comic que coincida con el identifier
+    if(id==comic.Page){
+	//print("----------"+data);
+//Uso la cadena apuntando directamente a la fecha del identifier, pero ahora usaré todas las partes.
+//Existen dos problemas: que no haya comic ese dia(solo pasa se se salta con el dialogo "ir a", asi que lo dejo asi),
+//y el guión que aveces aparecerá en match[2](listo)
+//Voy retrocediendo hasta hayar una fecha anterior
+	var flag=0;
+	//var i=1;
+	comic.previousIdentifier=comic.identifier;
+	comic.nextIdentifier=comic.identifier;
+	while(flag==0){
+	  //print(comic.identifier,date.fromString(comic.firstIdentifier,"yyyy-MM-dd"),comic.firstIdentifier,comic.lastIdentifier);
+	  //print(comic.identifier,ala);
+	 // print(comic.identifier.toString("yyyy-MM-dd")<ala.toString("yyyy-MM-dd"));
+	  if(comic.identifier.toString("yyyy-MM-dd")>comic.firstIdentifier.toString("yyyy-MM-dd")){
+	    //print("paso 2");
+	    dat = comic.previousIdentifier.addDays(-1);
+	    comic.previousIdentifier=dat;
+// 	    print(comic.firstIdentifier+comic.previousIdentifier.toString("yyyy-MM-dd"));
+	    var re = new RegExp("href=\"("+comic.previousIdentifier.toString("yyyy-MM-dd")+")([^\\.]*)(\\.\\S\\S\\S)");
+	    var match = re.exec(data);
+	    if(match!=null){flag=1}	 
+	    //print(" "+flag);
+	  }else{
+	    //comic.previousIdentifier=comic.identifier;
+	    flag=1;}
+	}
+	flag=0;
+	while(flag==0){
+	  if(comic.identifier.toString("yyyy-MM-dd")<comic.lastIdentifier.toString("yyyy-MM-dd")){
+	    dat = comic.nextIdentifier.addDays(1);
+	    print("  "+comic.nextIdentifier.toString("yyyy-MM-dd"));
+	    comic.nextIdentifier=dat;
+	    print(comic.lastIdentifier+comic.nextIdentifier.toString("yyyy-MM-dd"));
+	    //print(comic.identifier.toString("yyyy-MM-dd")+" "+comic.lastIdentifier.toString("yyyy-MM-dd")+" "+comic.nextIdentifier.toString("yyyy-MM-dd"));
+	    var re = new RegExp("href=\"("+comic.nextIdentifier.toString("yyyy-MM-dd")+")([^\\.]*)(\\.\\S\\S\\S)");
+	    var match = re.exec(data);
+	    if(match!=null){flag=1}	  
+	    //print(flag);
+	  }else{
+	    //comic.nextIdentifier=comic.identifier;
+	    flag=1;}
+	}
+	print(comic.previousIdentifier+"   "+comic.nextIdentifier);
+	dat = comic.identifier.toString("yyyy-MM-dd");
+	var re = new RegExp("href=\"("+dat+")([^\\.]*)(\\.\\S\\S\\S)");
+	//print(re);
+	var match = re.exec(data);
+	if (match != null) {
+	      print("-<-<-<"+match[1]+"||"+match[2]+"||"+match[3]+"||"+comic.identifier);
+	      comic.finImg="http://drmcninja.com/comics/"+match[1]+match[2]+match[3];
+	      //comic.requestPage(url, comic.Image);
+	      var re = new RegExp("-?(.*)");
+	      //print(re.exec(match[2])[1]);
+	      //finalmente llamo la págin donde está el comic (la que se muestra en la web) para vel el alt text.
+	      //Podría haber ido directamente a esta, pero quise complicarme.
+	      if(match!=null){
+		  comic.requestPage("http://drmcninja.com/archives/comic/"+re.exec(match[2])[1]+"/", 10)
+		  //http://drmcninja.com/archives/comic/
+		  comic.finSufix = re.exec(match[2])[1];
+	      }
+	}else{
+	      comic.error();
+	      return;
+	}
+	
+	
+    }
+    if(id==10){
+        print(comic.finSufix+"  "+comic.finImg);
+	var re = new RegExp("alt=\""+comic.finSufix+"\" title=\"([^\"]*)\"");
+	print(re+"   "+re.exec(data)[1]);
+	comic.additionalText = re.exec(data)[1];
+        comic.title = "Ch"+comic.finSufix;
+        comic.requestPage(comic.finImg, comic.Image);
+	//comic.requestPage("http://newcdn.pvponline.com/img/comic/pvp20120727.jpg", comic.Image);
+    }
+    
+    //find the url to the comic website
+//     if (id == comic.User) {
+//         //find the most recent date
+//         if (findNewDate) {
+//             var re = new RegExp("alt=\"[IMG]\"></td><td><a href=\"(\\d{4}-\\d{2}-\\d{2})[^/]+/\\.jpg)");
+//             var match = re.exec(data);
+//             if (match != null) {
+//                 comic.identifier = date.fromString(match[2], "yyyy/MM/dd");
+//                 comic.websiteUrl = match[1];
+//             } else {
+//                 comic.error();
+//                 return;
+//             }
+//         } else {
+//             var re = new RegExp("<a href=\"(" + mainPage + comic.identifier.toString("yyyy/MM/dd/") + "[^\"]+)\"><img");
+//             var match = re.exec(data);
+//             if (match != null) {
+//                 comic.websiteUrl = match[1];
+//             } else {
+//                 comic.error();
+//                 return;
+//             }
+//         }
+//  
+//         comic.requestPage(comic.websiteUrl, comic.Page);
+//     }
+    
+    //print(comic.identifier.toString("yyyy-MM-dd"));
+    print("\n\npageretrieved\n");
+    //comic.identifier = today.date;
+    //print("99999"+comic.identifier.date);
+    //print("99999"+dat);
+    //dat="2012-07-27";
+    //var re = new RegExp("("+dat+"[^\\.]+\\.jpg)");
+//     if(id == comic.User){
+// 	var re = new RegExp("http://drmcninja.com/comics/(\\d{4}-\\d{2}-\\d{2}[^\\.]*\\.\\S\\S\\S)");
+// 	
+// 	//var re = new RegExp("(pvp"+dat+"[^\\.]*\\.jpg)");
+// 	//print(data);
+// 	
+// 	match = re.exec(data);
+// 	if(match!=null){comic.lastIdentifier=match[1];}
+// 	comic.requestPage("http://drmcninja.com/comics/", comic.Page);
+//     }
+//     tad = comic.identifier.addDays(-1);
+//     print(tad+comic.identifier);
+//     if(tad.dayOfWeek() == 1 || tad.dayOfWeek() == 3 || tad.dayOfWeek() == 5){
+// 	print(tad);
+//     }
+    //var flagy=0;
+//     while(flagy==0){
+// 	if(comic.identifier.dayOfWeek() == 1 || comic.identifier.dayOfWeek() == 3 || comic.identifier.dayOfWeek() == 5){
+// 	flagy=1; }
+// 	comic.identifier=comic.identifier.addDays(-1);
+// 	print(comic.identifier.dayOfWeek());
+//     }
+    //print(comic.Page);
+    //print(comic.Image);
+    
+    //dat = comic.identifier.toString("yyyy-MM-dd");
+    //var re = new RegExp("("+dat+"[^\\.]*\\.\\S\\S\\S)");
+    //match = re.exec(data);
+    //print(data);
+    //print(re+"   "+match[1]);
+    //if(dat > match[1]){print("qwerty");}
+    
+    //print(">>>>"+dat+"    "+match)
+    //print(comic.identifier)
+    
+    
+//     if (match == null) {
+//     //  comic.error();
+//       print("5454");
+//       return;
+//     }
+    //url="http://drmcninja.com/comics/"+match[1];
+    //dat="20120727";
+    //url = "http://newcdn.pvponline.com/img/comic/pvp"+dat+".jpg";
+    //url = "http://drmcninja.com/comics/"+match[1];
+   // print(url);
+      //comic.error();
+      //return;
+    //} else {
+      //url = comic.websiteUrl+"comics/"+dat+".jpg";
+      //print(url);
+    //  comic.error();
+    //  return;
+    //}
+    
+//     url = comic.websiteUrl+"comics/"+dat+match[1];
+//     url="http://skin-horse.com/comics/" + match[1];
+//  	print("-------"+url);
+
+    //if (id == comic.Page) {
+    //if (match != null) {
+    //print(date.currentDate().date+"  "+comic.identifier.date);
+//     print(comic.url);
+//     comic.requestPage(comic.url, comic.Image);
+    //} else {
+      //          comic.error();
+      //          return;
+    //}
+//     url="http://skin-horse.com/comics/2012-07-28said_Sweetheart.jpg";
+//     print("-------"+comic.websiteUrl);
+//     comic.requestPage("http://skin-horse.com/comics/2012-07-28said_Sweetheart.jpg", comic.Image);
+//     comic.error();
+}
+
